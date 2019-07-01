@@ -29,7 +29,9 @@ class DataLoader():
                     fpath = path + '/' + file
 
                     try:
-                        pic = ilib.imread(fpath)[..., :3]
+                        pic = ilib.imread(fpath)#[..., :3]
+                        if pic.shape[-1] == 4:
+                            pic = cv2.cvtColor(pic, cv2.COLOR_BGRA2BGR)
                         pic = (pic/127.5) - 1 #scale into [1, -1] range
                         pic = tf.image.resize(pic, (self.params.img_size, self.params.img_size))
                         data.append(pic)
@@ -66,19 +68,6 @@ class DataLoader():
         print(f'Dataset Loaded. Features: {all_data}')
         print(f'Train {train_size}. Val: {val_size}')
 
-    def get_next_batch(self):
-
-        data = []
-        label = []
-
-        for _ in range(self.params.batch_size):
-            idx = np.random.randint(0, len(self.data))
-            data.append(self.data[idx])
-            label.append(self.label[idx])
-
-
-        return data, label
-
     def get_train(self):
         return self.train.batch(self.params.batch_size)
     
@@ -110,4 +99,22 @@ def get_poses():
             'warrior_I' : 11,
             'warrior_II' : 12,
             'warrior_III' : 13
+        } 
+
+def get_Idx():
+    return {
+            0: 'bridge',
+            1: 'camel',
+            2: 'chair',
+            3: 'chaturanga_dandasana',
+            4: 'cobra',
+            5: 'cow',
+            6: 'crescent_lunge',
+            7: 'half_moon',
+            8: 'plank',
+            9: 'tree',
+            10: 'triangle',
+            11: 'warrior_I',
+            12: 'warrior_II',
+            13: 'warrior_III'
         } 
