@@ -50,10 +50,19 @@ class DataLoader():
         with open(self.params.save_path,"rb") as f:
            [self.raw_data, self.raw_label] = joblib.load(f)
 
+
+        def map_aug(x, y):
+            print('cock')
+            print(x[0])
+            #plt.imshow(x)
+            print(x.shape)
+            return x, y
+
+
         dataset = tf.data.Dataset.from_tensor_slices((
             self.raw_data,
             self.raw_label
-        )).shuffle(self.params.shuffle_buffer_size)
+        )).shuffle(self.params.shuffle_buffer_size).map(map_func=map_aug)
 
         all_data = len(self.raw_data)
 
