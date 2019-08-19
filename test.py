@@ -1,6 +1,6 @@
 from model import Spinenet
 from dataloader import DataLoader, get_Idx
-from util import get_image
+from util import plot_images
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -14,5 +14,8 @@ sp = Spinenet(params)
 
 dl = DataLoader(params)
 
-batch_data = dl.get_train()
-val_data = dl.get_val()
+data = dl.get_train()
+
+model = Spinenet(params)
+print(model.model.summary())
+plot_images(data)

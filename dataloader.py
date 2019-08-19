@@ -6,6 +6,8 @@ import os
 from sklearn.externals import joblib
 import cv2
 
+from augmentation import color, flip, rotate, zoom
+
 class DataLoader():
 
     def __init__(self, params):
@@ -31,7 +33,7 @@ class DataLoader():
                     try:
                         pic = ilib.imread(fpath)#[..., :3]
                         if pic.shape[-1] == 4:
-                            pic = cv2.cvtColor(pic, cv2.COLOR_BGRA2BGR)
+                            pic = pic[..., 1:]
                         pic = (pic/127.5) - 1 #scale into [1, -1] range
                         pic = tf.image.resize(pic, (self.params.img_size, self.params.img_size))
                         data.append(pic)
@@ -50,27 +52,30 @@ class DataLoader():
         with open(self.params.save_path,"rb") as f:
            [self.raw_data, self.raw_label] = joblib.load(f)
 
-
-        def map_aug(x, y):
-            print('cock')
-            print(x[0])
-            #plt.imshow(x)
-            print(x.shape)
-            return x, y
-
-
         dataset = tf.data.Dataset.from_tensor_slices((
             self.raw_data,
             self.raw_label
-        )).shuffle(self.params.shuffle_buffer_size).map(map_func=map_aug)
-
+        )).shuffle(self.params.shuffle_buffer_size)
         all_data = len(self.raw_data)
 
         train_size = int(all_data * (100 - self.params.val_percentage)/100)
+
         val_size = all_data - train_size
 
         self.train = dataset.take(train_size)
         dataset.skip(train_size)
+
+        # Add augmentations
+        augmentations = [flip, color, zoom] #no rotation
+
+        # Add the augmentations to the dataset
+        for f in augmentations:
+            # Apply the augmentation, run 4 jobs in parallel.
+            self.train = self.train.map(f, num_parallel_calls=4)
+
+        #TODO lower augmentaion chance
+
+        self.train = self.train.map(lambda x, y: (tf.clip_by_value(x, 0, 1), y))
 
         self.val = dataset.take(val_size)
 
@@ -78,10 +83,16 @@ class DataLoader():
         print(f'Train {train_size}. Val: {val_size}')
 
     def get_train(self):
-        return self.train.batch(self.params.batch_size)
+        return self.train.batch(self.params.batch_size).prefetch(tf.data.experimental.AUTOTUNE)
     
     def get_val(self):
         return self.val.batch(self.params.batch_size)
+
+    def get_raw_data(self):
+        return tf.data.Dataset.from_tensor_slices((
+            self.raw_data,
+            self.raw_label
+        )).shuffle(self.params.shuffle_buffer_size)
 
     def to_one_hot(self, label):
         result = np.zeros(14)
@@ -94,20 +105,20 @@ class DataLoader():
 
 def get_poses():
     return {
-            'bridge' : 0,
-            'camel' : 1,
-            'chair' : 2,
-            'chaturanga_dandasana' : 3,
-            'cobra' : 4,
-            'cow' : 5,
-            'crescent_lunge' : 6,
-            'half_moon' : 7,
-            'plank' : 8,
-            'tree' : 9,
-            'triangle' : 10,
-            'warrior_I' : 11,
-            'warrior_II' : 12,
-            'warrior_III' : 13
+            'bridge': 0,
+            'camel': 1,
+            'chair': 2,
+            'chaturanga_dandasana': 3,
+            'cobra': 4,
+            'cow': 5,
+            'dog': 6,
+            'half_moon': 7,
+            'plank': 8,
+            'tree': 9,
+            'triangle': 10,
+            'warrior_I': 11,
+            'warrior_II': 12,
+            'warrior_III': 13
         } 
 
 def get_Idx():
@@ -118,7 +129,7 @@ def get_Idx():
             3: 'chaturanga_dandasana',
             4: 'cobra',
             5: 'cow',
-            6: 'crescent_lunge',
+            6: 'dog',
             7: 'half_moon',
             8: 'plank',
             9: 'tree',

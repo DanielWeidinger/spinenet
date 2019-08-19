@@ -20,9 +20,11 @@ class Parameter():
 
         #training
         parser.add_argument('--batch_size', default=32)
+        parser.add_argument('--epochs', default=80)
         parser.add_argument('--lr', default=0.0001)
-        parser.add_argument('--shuffle_buffer_size', default=1000)
-        parser.add_argument('--model_path', default='models/model-v2.h5')
+        parser.add_argument('--shuffle_buffer_size', default=6400)
+        parser.add_argument('--model_path', default='models/model-v5.h5')
+        parser.add_argument('--log_path', default='logs/log.txt')
 
         #model
         parser.add_argument('--untrainable_layer', default=100)

@@ -21,11 +21,12 @@ if params.train:
     batch_data = dl.get_train()
     val_data = dl.get_val()
 
-    history = sp.model.fit(batch_data, epochs=20, validation_data=val_data)
+    history = sp.model.fit(batch_data, epochs=params.epochs, validation_data=val_data)
     sp.model.save(params.model_path)
 
-else:
+    #TODO Logging
 
+else:
     img = get_image('test_pics/dude_standing.jpg', before=False, after=False)
 
     res = sp.model.predict(img)[0]
